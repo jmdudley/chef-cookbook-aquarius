@@ -1,3 +1,9 @@
+# 0.2.16
+* Removed configuration of cloudwatch via EC2Config
+* Parameterized the field report xsl url
+* Added identification of ID and KEY changes to BLOB configuration
+
+
 # 0.2.15
 * Added restart of SSM service if cloudwatch config updated
 * Fixed typo in Ec2Config service restart
