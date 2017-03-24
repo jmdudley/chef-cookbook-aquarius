@@ -2,6 +2,7 @@
 * Removed configuration of cloudwatch via EC2Config
 * Parameterized the field report xsl url
 * Added identification of ID and KEY changes to BLOB configuration
+* Added check for AQ services being enabled before licensing
 
 
 # 0.2.15
