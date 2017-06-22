@@ -32,10 +32,10 @@ ruby_block 'configure BLOB store' do
       end
       if cur_bucket != s3_bucket || cur_id != blob_id || cur_key != blob_key
         Chef::Log.info('Current configuration does not match what is in Chef databag...')
-        Chef::Log.info('Configuring the S2blob storage provider...')
+        Chef::Log.info('Configuring the S3blob storage provider...')
         configout = `\"C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\storagetool.exe\" set S3blob /Type=AmazonS3 /BucketName=#{s3_bucket} /AccessKeyId=#{blob_id} /SecretAccessKey=#{blob_key} /RegionId=#{region_id} /virtualrootpath=/aquarius/static`
         if configout.include? 'S3blob: Connectivity status = GOOD'
-          Chef::Log.info('The S3 bucket for BLOB storage has been configured as: #{s3_bucket}')
+          Chef::Log.info("The S3 bucket for BLOB storage has been configured as: #{s3_bucket}")
           Chef::Log.info('Activating the S3 bucket for BLOB storage...')
           activateout = `\"C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\storagetool.exe\" Activate S3blob`
           if activateout.include? 'Activated provider S3blob'
