@@ -1,9 +1,15 @@
+# 0.2.18
+* Added tier parameter in order to seperate out s3 configuration files by tier
+* Added check for HttpsConfigurationTool.exe location since it has changed in 2017.2GA
+
+# 0.2.17
+* Added check for StorageTool.exe location since it has changed in 2017.2GA
+
 # 0.2.16
 * Removed configuration of cloudwatch via EC2Config
 * Parameterized the field report xsl url
 * Added identification of ID and KEY changes to BLOB configuration
 * Added check for AQ services being enabled before licensing
-
 
 # 0.2.15
 * Added restart of SSM service if cloudwatch config updated

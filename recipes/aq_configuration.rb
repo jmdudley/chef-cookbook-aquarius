@@ -1,6 +1,6 @@
 require 'open-uri'
 require 'json'
-
+# Retrieve sensitive information from Chef databag
 ruby_block 'get credentials from encrypted data bag' do
   block do
     databag_item = data_bag_item(node['aq_config']['databag'], node['aq_config']['database_databag'])
@@ -15,13 +15,16 @@ ruby_block 'get credentials from encrypted data bag' do
   end
   action :run
 end
+# Retrieve helper scripts
 powershell_script 'Get helper scripts' do
   code <<-EOH
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/helper_scripts/" "C:/helper_scripts/" --recursive
+    $tier="#{node['aq_config']['tier']}"
+    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/$tier/helper_scripts/" "C:/helper_scripts/" --recursive
   EOH
   action :run
   ignore_failure true
 end
+# Create AQ database configuration file
 template 'C:/ProgramData/Aquatic Informatics/AQUARIUS/AquariusDataSource.xml' do
   source 'AquariusDataSource.xml.erb'
   action :create
@@ -35,11 +38,12 @@ template 'C:/ProgramData/Aquatic Informatics/AQUARIUS/AquariusDataSource.xml' do
              }
            )
 end
-
+# Configure performance counters
 powershell_script 'AQ Perfmon Config' do
   code <<-EOH
+  $tier="#{node['aq_config']['tier']}"
   if ( (& "C:/Windows/system32/logman" query AQPerfCounters) -like '*Data Collector Set was not found*' ) {
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/AquariusPerformanceCounters.xml" "C:/PerfLogs/AquariusPerformanceCounters.xml"
+    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/$tier/AquariusPerformanceCounters.xml" "C:/PerfLogs/AquariusPerformanceCounters.xml"
     & "C:/Windows/system32/logman" import AQPerfCounters -xml "C:/PerfLogs/AquariusPerformanceCounters.xml"
     & "C:/Windows/system32/logman" start AQPerfCounters
   } else {
@@ -49,27 +53,32 @@ powershell_script 'AQ Perfmon Config' do
   action :run
   ignore_failure true
 end
-
+# Create a redirect file for IIS
 file 'C:\\inetpub\\wwwroot\\index.html' do
   content '<html><head><meta http-equiv="refresh" content="0; URL=\'/AQUARIUS/\'" /></head></html>'
   action :create
 end
-
+# Set the number of concurrent event processors
 powershell_script 'AQ Eventprocessors Config' do
   code <<-EOH
   $num_procs="#{node['aq_config']['relative_event_processors']}"
-  [xml]$myXML = Get-Content "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\EventProcessor\\EventProcessor.exe.Config"
+  if (Test-Path "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\EventProcessor\\EventProcessor.exe.Config") {
+    $config_path="C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\EventProcessor\\EventProcessor.exe.Config"
+  } elseif (Test-Path "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\EventProcessor.exe.Config") {
+    $config_path="C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\EventProcessor.exe.Config"
+  }
+  [xml]$myXML = Get-Content $config_path
   If ( $myXML.SelectNodes("//configuration/appSettings/add[@ key='ConcurrentActionLimit']").Count -gt 0 ) {
     if ( $myXML.SelectNodes("//configuration/appSettings/add[@ key='ConcurrentActionLimit']/@value").Item(0).Value -ne $num_procs ) {
       $myXML.SelectNodes("//configuration/appSettings/add[@ key='ConcurrentActionLimit']/@value").Item(0).Value=$num_procs
-      $myXML.Save("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\EventProcessor\\EventProcessor.exe.Config")
+      $myXML.Save($config_path)
     }
   } else {
     $child = $myXML.CreateElement("add")
     $child.SetAttribute("key","ConcurrentActionLimit")
     $child.SetAttribute("value",$num_procs)
     $myXML.SelectNodes("//configuration/appSettings").item(0).AppendChild($child)
-    $myXML.Save("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\EventProcessor\\EventProcessor.exe.Config")
+    $myXML.Save($config_path)
   }
   EOH
   action :run
@@ -88,16 +97,9 @@ remote_file 'C:\\ProgramData\\Aquatic Informatics\\AQUARIUS Server\\Attachments\
   inherits true
   ignore_failure true
 end
+# Configure https on the server if needed
 if node['aq_config']['enable_https']
   include_recipe 'aq_installation::config_https'
 end
 include_recipe 'aq_installation::config_blob_store'
 
-# powershell_script 'IIS Advanced Logging Config' do
-#  code <<-EOH
-#  & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://config-bucket-#{account_id}/install-files/iis/iis_advanced_logging_config.ps1" "C:/Users/Administrator/Downloads/iis_advanced_logging_config.ps1"
-#  & "C:/Users/Administrator/Downloads/iis_advanced_logging_config.ps1"
-#  EOH
-#  action :run
-#  ignore_failure true
-# end

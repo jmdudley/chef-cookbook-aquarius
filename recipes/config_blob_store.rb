@@ -12,7 +12,14 @@ ruby_block 'configure BLOB store' do
     s3_bucket = aquarius_data_bag['s3_blob_bucket']
     blob_id = aquarius_data_bag['s3_blob_id']
     blob_key = aquarius_data_bag['s3_blob_key']
-    cur_blob_config = `powershell -Command \"(& 'C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\StorageTool.exe' show S3blob)\"`
+    if File.file?("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\StorageTool.exe")
+      storetool = "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\StorageTool.exe"
+    elsif File.file?("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\StorageTool.exe")
+      storetool = "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\StorageTool.exe"
+    else
+      Chef::Log.error('Unable to find StorageTool.exe!!!')
+    end
+    cur_blob_config = `powershell -Command \"(& '#{storetool}' show S3blob)\"`
     if cur_blob_config.include? 'ERROR: ORA-12154: TNS:could not resolve the connect identifier specified'
       Chef::Log.info('Unable resolve specified database...')
       Chef::Log.info("#{cur_blob_config}")
@@ -33,11 +40,11 @@ ruby_block 'configure BLOB store' do
       if cur_bucket != s3_bucket || cur_id != blob_id || cur_key != blob_key
         Chef::Log.info('Current configuration does not match what is in Chef databag...')
         Chef::Log.info('Configuring the S3blob storage provider...')
-        configout = `\"C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\storagetool.exe\" set S3blob /Type=AmazonS3 /BucketName=#{s3_bucket} /AccessKeyId=#{blob_id} /SecretAccessKey=#{blob_key} /RegionId=#{region_id} /virtualrootpath=/aquarius/static`
+        configout = `\"#{storetool}\" set S3blob /Type=AmazonS3 /BucketName=#{s3_bucket} /AccessKeyId=#{blob_id} /SecretAccessKey=#{blob_key} /RegionId=#{region_id} /virtualrootpath=/aquarius/static`
         if configout.include? 'S3blob: Connectivity status = GOOD'
           Chef::Log.info("The S3 bucket for BLOB storage has been configured as: #{s3_bucket}")
           Chef::Log.info('Activating the S3 bucket for BLOB storage...')
-          activateout = `\"C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\WebServices\\bin\\storagetool.exe\" Activate S3blob`
+          activateout = `\"#{storetool}\" Activate S3blob`
           if activateout.include? 'Activated provider S3blob'
             Chef::Log.info("The S3 bucket for BLOB storage has been activated as: #{s3_bucket}")
             # AT THIS POINT WE MAY WANT TO LOOK AT RESTARTING AQ SERVICES ON ALL SERVERS WITHIN THE ASG SINCE IT SEEMS THE CREDENTIALS ARE CACHED
