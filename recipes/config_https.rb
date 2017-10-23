@@ -13,8 +13,8 @@ ruby_block 'configure https' do
       tier = node['aq_config']['tier']
       if File.file?("C:\\Program Files\\Common Files\\Aquatic Informatics\\AQUARIUS\\HttpsConfigurationTool.exe")
         httpstool = "C:\\Program Files\\Common Files\\Aquatic Informatics\\AQUARIUS\\HttpsConfigurationTool.exe"
-      elsif File.file?("C:\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\HttpsConfigurationTool.exe")
-        httpstool = "C:\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\HttpsConfigurationTool.exe"
+      elsif File.file?("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\HttpsConfigurationTool.exe")
+        httpstool = "C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\HttpsConfigurationTool.exe"
       else
         Chef::Log.error('Unable to find HttpsConfigurationTool.exe!!!')
       end
