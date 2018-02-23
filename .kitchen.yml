@@ -1,38 +1,25 @@
 ---
 driver:
-  name: ec2
-  aws_ssh_key_id: nwists_admin
-  transport.ssh_key: C:/Users/ayan/.ssh/nwists_admin.pem
-  region: us-west-2
-  availability_zone: a
-  subnet_id: subnet-6fe14b0a
-  iam_profile_name: cida_admin
-  instance_type: m4.large
-  associate_public_ip: false
-  retryable_sleep: 60
-  retryable_tries: 120
-  security_group_ids: ["sg-42cd8e26", "sg-07601162"]
+  name: hyperv
+  parent_vhd_folder: C:\Hyper-V
+  parent_vhd_name: WindowsServer2012R2.vhdx
+  vm_switch: ExternalSwitch
+  memory_startup_bytes: 2GB
 
 provisioner:
-  name: chef_solo
-  chef_solo_path: C:/opscode/chefdk/bin
+  name: chef_zero
+
+verifier:
+  name: inspec
+
+transport:
+  password: 0mainWRD!
+  elevated: true
 
 platforms:
-  - name: windows-2008r2
-    driver:
-      image_id: ami-b033c6d0
-      block_device_mappings:
-        - device_name: /dev/sda1
-          ebs:
-            volume_type: standard
-            volume_size: 50
-            delete_on_termination: true
-      transport:
-        name: winrm
-        connection_timeout: 600
-        connection_retries: 5
+  - name: windows-2012R2
 
 suites:
-  - name: windows-2008r2-aquarius-install
+  - name: default
     run_list:
-      - recipe[aq_installation::default]
+      - recipe[aq_installation::aq_configuration]

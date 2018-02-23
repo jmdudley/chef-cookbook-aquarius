@@ -19,7 +19,8 @@ end
 powershell_script 'Get helper scripts' do
   code <<-EOH
     $tier="#{node['aq_config']['tier']}"
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/$tier/helper_scripts/" "C:/helper_scripts/" --recursive
+    $bucket="#{node['aq_config']['config_bucket']}"
+    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://${bucket}Application/aquarius/configuration/$tier/helper_scripts/" "C:/helper_scripts/" --recursive
   EOH
   action :run
   ignore_failure true
@@ -29,21 +30,22 @@ template 'C:/ProgramData/Aquatic Informatics/AQUARIUS/AquariusDataSource.xml' do
   source 'AquariusDataSource.xml.erb'
   action :create
   variables(
-             lazy {
-              {:db_username => node.run_state['db_username'],
-               :db_password => node.run_state['db_password'],
-               :db_server_name => node.run_state['db_server_name'],
-               :db_name => node.run_state['db_name']
-              }
-             }
-           )
+    lazy {
+    {:db_username => node.run_state['db_username'],
+      :db_password => node.run_state['db_password'],
+      :db_server_name => node.run_state['db_server_name'],
+      :db_name => node.run_state['db_name']
+    }
+    }
+  )
 end
 # Configure performance counters
 powershell_script 'AQ Perfmon Config' do
   code <<-EOH
   $tier="#{node['aq_config']['tier']}"
+  $bucket="#{node['aq_config']['config_bucket']}"
   if ( (& "C:/Windows/system32/logman" query AQPerfCounters) -like '*Data Collector Set was not found*' ) {
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://devops-owi-configuration-management/application/aquarius/configuration/$tier/AquariusPerformanceCounters.xml" "C:/PerfLogs/AquariusPerformanceCounters.xml"
+    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://${bucket}Application/aquarius/configuration/$tier/AquariusPerformanceCounters.xml" "C:/PerfLogs/AquariusPerformanceCounters.xml"
     & "C:/Windows/system32/logman" import AQPerfCounters -xml "C:/PerfLogs/AquariusPerformanceCounters.xml"
     & "C:/Windows/system32/logman" start AQPerfCounters
   } else {

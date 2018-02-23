@@ -11,6 +11,7 @@ ruby_block 'configure https' do
       cert_pass = aquarius_data_bag['cert_password']
       cert_name = aquarius_data_bag['cert_name']
       tier = node['aq_config']['tier']
+      bucket = node['aq_config']['config_bucket']
       if File.file?("C:\\Program Files\\Common Files\\Aquatic Informatics\\AQUARIUS\\HttpsConfigurationTool.exe")
         httpstool = "C:\\Program Files\\Common Files\\Aquatic Informatics\\AQUARIUS\\HttpsConfigurationTool.exe"
       elsif File.file?("C:\\Program Files\\Aquatic Informatics\\AQUARIUS Server\\bin\\HttpsConfigurationTool.exe")
@@ -18,7 +19,7 @@ ruby_block 'configure https' do
       else
         Chef::Log.error('Unable to find HttpsConfigurationTool.exe!!!')
       end
-      `\"C:\\Program Files\\Amazon\\AWSCLI\\aws\" s3 cp \"s3://devops-owi-configuration-management/application/aquarius/configuration/#{tier}/asg_certs/#{cert_name}\" \"C:\\#{cert_name}\"`
+      `\"C:\\Program Files\\Amazon\\AWSCLI\\aws\" s3 cp \"s3://#{bucket}Application/aquarius/configuration/#{tier}/asg_certs/#{cert_name}\" \"C:\\#{cert_name}\"`
       configout = `\"#{httpstool}\" -c\"C:\\#{cert_name}\" -p#{cert_pass}`
       unless configout.to_s.empty?
         Chef::Log.error('Unable to configure HTTPS')

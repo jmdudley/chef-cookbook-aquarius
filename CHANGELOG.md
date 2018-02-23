@@ -1,3 +1,6 @@
+# 0.2.19
+* Added config_bucket location parameter for use between accounts
+
 # 0.2.18
 * Added tier parameter in order to seperate out s3 configuration files by tier
 * Added check for HttpsConfigurationTool.exe location since it has changed in 2017.2GA
