@@ -4,7 +4,7 @@
 * Parameterized multiple values
 * Removed unused files/recipes
 * Multiple rubocop linting fixes
-* Added Inspec tests
+* Added inspec tests
 
 # 0.2.19
 * Added config_bucket location parameter for use between accounts
