@@ -1,9 +1,7 @@
-require 'open-uri'
-require 'json'
 # Retrieve sensitive information from Chef databag
 ruby_block 'get credentials from encrypted data bag' do
   block do
-    databag_item = data_bag_item(node['aq_config']['databag'], node['aq_config']['database_databag'])
+    databag_item = data_bag_item(node['aq_config']['databag'], node['aq_config']['databag_item'])
     password = databag_item['password']
     username = databag_item['username']
     server_name = databag_item['server_name']
@@ -15,37 +13,44 @@ ruby_block 'get credentials from encrypted data bag' do
   end
   action :run
 end
-# Retrieve helper scripts
-powershell_script 'Get helper scripts' do
-  code <<-EOH
-    $tier="#{node['aq_config']['tier']}"
-    $bucket="#{node['aq_config']['config_bucket']}"
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://${bucket}Application/aquarius/configuration/$tier/helper_scripts/" "C:/helper_scripts/" --recursive
-  EOH
-  action :run
+
+# Add directory to server for helper scripts
+directory 'C:\\helper_scripts' do
+  action :create
+  inherits true
   ignore_failure true
 end
+
+# Retrieve helper scripts
+node['aq_config']['helpers'].each do |filename, src|
+  remote_file "C:\\helper_scripts\\#{filename}" do
+    source src
+    action :create
+  end
+end
+
 # Create AQ database configuration file
 template 'C:/ProgramData/Aquatic Informatics/AQUARIUS/AquariusDataSource.xml' do
   source 'AquariusDataSource.xml.erb'
   action :create
   variables(
     lazy {
-    {:db_username => node.run_state['db_username'],
-      :db_password => node.run_state['db_password'],
-      :db_server_name => node.run_state['db_server_name'],
-      :db_name => node.run_state['db_name']
-    }
+      {
+        db_username: node.run_state['db_username'],
+        db_password: node.run_state['db_password'],
+        db_server_name: node.run_state['db_server_name'],
+        db_name: node.run_state['db_name']
+      }
     }
   )
 end
+
 # Configure performance counters
 powershell_script 'AQ Perfmon Config' do
   code <<-EOH
-  $tier="#{node['aq_config']['tier']}"
-  $bucket="#{node['aq_config']['config_bucket']}"
+  $percounters="#{node['aq_config']['perfcounters_location']}"
   if ( (& "C:/Windows/system32/logman" query AQPerfCounters) -like '*Data Collector Set was not found*' ) {
-    & "C:/Program Files/Amazon/AWSCLI/aws" s3 cp "s3://${bucket}Application/aquarius/configuration/$tier/AquariusPerformanceCounters.xml" "C:/PerfLogs/AquariusPerformanceCounters.xml"
+    (New-Object System.Net.WebClient).DownloadFile($percounters, "C:/PerfLogs/AquariusPerformanceCounters.xml")
     & "C:/Windows/system32/logman" import AQPerfCounters -xml "C:/PerfLogs/AquariusPerformanceCounters.xml"
     & "C:/Windows/system32/logman" start AQPerfCounters
   } else {
@@ -86,12 +91,14 @@ powershell_script 'AQ Eventprocessors Config' do
   action :run
   ignore_failure true
 end
+
 # Add directory to server for stylesheet
 directory 'C:\\ProgramData\\Aquatic Informatics\\AQUARIUS Server\\Attachments\\templates' do
   action :create
   inherits true
   ignore_failure true
 end
+
 # Add report stylesheet to server
 remote_file 'C:\\ProgramData\\Aquatic Informatics\\AQUARIUS Server\\Attachments\\templates\\WebApps.ServiceModel.ResponseDtos.Visits.VisitInfo.xsl' do
   source node['aq_config']['xsl_report_url']
@@ -99,9 +106,9 @@ remote_file 'C:\\ProgramData\\Aquatic Informatics\\AQUARIUS Server\\Attachments\
   inherits true
   ignore_failure true
 end
+
 # Configure https on the server if needed
 if node['aq_config']['enable_https']
   include_recipe 'aq_installation::config_https'
 end
 include_recipe 'aq_installation::config_blob_store'
-

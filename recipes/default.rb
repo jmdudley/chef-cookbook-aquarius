@@ -7,5 +7,6 @@
 # All rights reserved - Do Not Redistribute
 #
 
-
 include_recipe 'aq_installation::aq_install'
+include_recipe 'aq_installation::aq_configuration]'
+include_recipe 'aq_installation::license_aq]'

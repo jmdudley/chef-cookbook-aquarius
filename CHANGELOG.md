@@ -1,3 +1,11 @@
+## Changelog
+---------
+# 0.2.20
+* Parameterized multiple values
+* Removed unused files/recipes
+* Multiple rubocop linting fixes
+* Added Inspec tests
+
 # 0.2.19
 * Added config_bucket location parameter for use between accounts
 
@@ -42,44 +50,36 @@
 * Added EC2Config Cloudwatch configuration to send logs and data to cloudwatch
 
 # 0.2.7
-
 * Adjusted Event processor config to only save file on change
 * Added placement of stylesheet for field visit summary report
 * Added checks to avoid unnecassary overwrites of files
 
 # 0.2.6
-
 * Added new data credential file
 * Added Event processor # configuration
 * Changed default Aquarius version to 2015.4 GA Update 1
 
 # 0.2.5
-
 * Use AWS instead of Vagrant for testing (not totally working yet)
 * Minor changes to use chef-client 12.8
 * Support Aquarius redirect using index.html
 
 # 0.2.4
-
 * Remove powershell_script resources from recipes that are used by Packer
 * Use ruby_block resources to effect deletes and clean-up of items downloaded during provisioning
 * Change default Aquarius version to 2015.4 GA
 
 # 0.2.2
-
 * machine.config configuration uses a template rather than a heredoc string
 * Remove configuration of Framework64 machine.config files
 
 # 0.2.1
-
 * Set data bag and data bag items as attributes
 
 # 0.2.0
-
 * Support for Aquarius 64-bit
 * Configure Framework and Framework64 machine.config
 * Replace `powershell_script` resources with`python` resources
 
 # 0.1.0
-
 * Initial release of aq_installation

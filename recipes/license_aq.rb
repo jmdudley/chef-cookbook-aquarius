@@ -8,7 +8,7 @@ ruby_block 'license aquarius' do
         Chef::Log.info('Server already has an active AQ license')
       else
         Chef::Log.info('Activating AQ license')
-        aquarius_data_bag = data_bag_item(node['aq_config']['databag'], 'aq_license')
+        aquarius_data_bag = data_bag_item(node['aq_config']['databag'], node['license_aq']['license_databag_item'])
         license_key = aquarius_data_bag['license_code']
         # execute a powershell command from ruby
         activation = `\"C:/Program Files/Aquatic Informatics/AQUARIUS Licence Manager/AutoActivate.exe\" activate #{license_key}`

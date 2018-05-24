@@ -10,14 +10,17 @@ pkg/
 .vagrant
 /cookbooks
 
-Berksfile.lock
+DS_Store
+.rake_test_cache
 
-
-# Bundler
-Gemfile.lock
-bin/*
-.bundle/*
-
-
+###
+# Ignore Chef key files and secrets
+###
+.chef/*.pem
+.chef/encrypted_data_bag_secret
 .kitchen/
 .kitchen.local.yml
+nwists_data/*
+installation_data/*
+Berksfile.lock
+Gemfile.lock

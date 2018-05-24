@@ -8,13 +8,14 @@ driver:
 
 provisioner:
   name: chef_zero
+  log_file: C:\users\Administrator\Desktop\chef-client.log
 
 verifier:
   name: inspec
 
 transport:
-  password: 0mainWRD!
   elevated: true
+  password: password
 
 platforms:
   - name: windows-2012R2
@@ -22,4 +23,9 @@ platforms:
 suites:
   - name: default
     run_list:
+      - recipe[aq_installation::aq_install]
       - recipe[aq_installation::aq_configuration]
+      - recipe[aq_installation::license_aq]
+    data_path: './test/fixtures/files/'
+    data_bags_path: './test/integration/data_bags' 
+    encrypted_data_bag_secret_key_path: './test/integration/default/encrypted_data_bag_secret'

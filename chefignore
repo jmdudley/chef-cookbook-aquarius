@@ -1,1 +1,12 @@
+.gitignore
 .kitchen
+.rubocop.yml
+Berksfile
+Berksfile.lock
+chefignore
+Gemfile.lock
+LICENSE
+private.pem
+public.pem
+Thorfile
+*.attribs
